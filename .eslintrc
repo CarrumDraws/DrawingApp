@@ -1,0 +1,8 @@
+{
+  "extends": ["react-app", "prettier"],
+  "rules": {
+    "prettier/prettier": ["error", { "endOfLine": "crlf" }], // prettier options go here
+    "no-console": "warn"
+  },
+  "plugins": ["prettier"]
+}
