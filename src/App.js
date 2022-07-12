@@ -1,50 +1,54 @@
 import React, { useLayoutEffect, useState } from "react";
-import { RoughCanvas } from "roughjs/bin/canvas";
 import rough from "roughjs/bundled/rough.esm.js";
 
-const generator = rough.generator(); // Declare Generator
+const generator = rough.generator();
 
-// Creates Line
-function createElement(x1, y1, x2, y2) {
-  const roughElement = generator.line(x1, y1, x2, y2);
+// Now takes in 'type' param
+function createElement(x1, y1, x2, y2, type) {
+  const roughElement =
+    type === "line" // Depending on the type, renders either a line or a rectangle
+      ? generator.line(x1, y1, x2, y2)
+      : generator.rectangle(x1, y1, x2 - x1, y2 - y1); // Note: rectangle take in different params
   return { x1, y1, x2, y2, roughElement };
 }
 
 function App() {
+  const [elementType, setElementType] = useState("line"); // New
   const [elements, setElements] = useState([]);
   const [drawing, setDrawing] = useState(false);
 
-  // useLayoutEffect is like useEffect but for DOM mutations.
-  // Use this if your DOM's appearance changes between its rendering and its mutation.
   useLayoutEffect(() => {
     const canvas = document.getElementById("canvas");
-    const context = canvas.getContext("2d"); // The context is what we use to render our drawings on to.
+    const context = canvas.getContext("2d");
     context.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
-    const roughCanvas = rough.canvas(canvas); // Declare a Rough Canvas
+    const roughCanvas = rough.canvas(canvas);
 
-    //Create shapes with generator
-    // const line = generator.line(80, 120, 300, 100); // x1, y1, x2, y2
-    // roughCanvas.draw(line);
-    elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement)); // Desturcture the roughElement out of every element in elements
+    elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement));
   }, [elements]);
 
   const handleMouseDown = (event) => {
     setDrawing(true);
     const { clientX, clientY } = event;
-    const element = createElement(clientX, clientY, clientX, clientY);
+    const element = createElement(
+      clientX,
+      clientY,
+      clientX,
+      clientY,
+      elementType
+    );
     setElements((prevState) => [...prevState, element]);
   };
   const handleMouseMove = (event) => {
     if (!drawing) return;
 
-    const { clientX, clientY } = event; // clientX and clientY are relative to the element, NOT the screen
+    const { clientX, clientY } = event;
     const index = elements.length - 1;
 
-    const { x1, y1 } = elements[index]; // get the x1 and y1 of the last element- the element created in handleMouseDown...
-    const updatedElement = createElement(x1, y1, clientX, clientY); // ...and make a new element with that data.
+    const { x1, y1 } = elements[index];
+    const updatedElement = createElement(x1, y1, clientX, clientY, elementType);
 
-    const elementsCopy = [...elements]; // Replace the las element with the one yu just created.
+    const elementsCopy = [...elements];
     elementsCopy[index] = updatedElement;
     setElements(elementsCopy);
   };
@@ -53,17 +57,36 @@ function App() {
   };
 
   return (
-    <canvas
-      id="canvas"
-      style={{ backgroundColor: "#555555" }}
-      width={window.innerWidth}
-      height={window.innerHeight}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-    >
-      Canvas
-    </canvas>
+    <div>
+      <div style={{ position: "fixed" }}>
+        <input
+          type="radio"
+          id="line"
+          checked={elementType === "line"}
+          onChange={() => setElementType("line")}
+        />
+        <label htmlFor="line">Line</label>
+        <input
+          type="radio"
+          id="rectangle"
+          checked={elementType === "rectangle"}
+          onChange={() => setElementType("rectangle")}
+        />
+        <label htmlFor="rectangle">Rectangle</label>
+      </div>
+
+      <canvas
+        id="canvas"
+        style={{ backgroundColor: "#999999" }}
+        width={window.innerWidth}
+        height={window.innerHeight}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+      >
+        Canvas
+      </canvas>
+    </div>
   );
 }
 
